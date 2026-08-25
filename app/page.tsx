@@ -76,7 +76,7 @@ export default function Home() {
 
   function logout() { localStorage.clear(); setLogged(false); }
 
-  const canManageUsers = Boolean(currentUser?.organisation_id && !currentUser?.platform_admin && currentUser?.role === "admin");
+  const canManageUsers = Boolean(currentUser?.organisation_id && !currentUser?.platform_admin && (currentUser?.role === "owner" || currentUser?.role === "admin"));
   return <main className="app"><Sidebar section={section} organisationName={textOf(organisation || {}, ["nom"])} canManageUsers={canManageUsers} isPlatformAdmin={Boolean(currentUser?.platform_admin)} onNavigate={setSection} onLogout={logout} /><div className="main"><header><div className="top-summary">{books.length} ouvrages <span>·</span> {members.length} membres</div><button className="theme-toggle" title="Changer de thème">☾</button></header>{error && <div className="alert">{error}<button onClick={() => setError("")}>×</button></div>}{loading && <div className="progress" />}<Content section={section} books={books} authors={authors} categories={categories} libraries={libraries} members={members} loans={loans} users={users} organisations={organisations} platformLibraries={platformLibraries} selectedLibrary={selectedLibrary} onLibraryChange={setSelectedLibrary} mutate={mutate} onNavigate={setSection} /></div></main>;
 }
 
