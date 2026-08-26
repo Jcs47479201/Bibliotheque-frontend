@@ -71,7 +71,7 @@ export default function Home() {
 
   async function mutate(path: string, method: string, data?: Data) {
     try { await apiRequest(path, { method, body: data ? JSON.stringify(data) : undefined }); await loadData(); }
-    catch (exception) { setError(exception instanceof Error ? exception.message : "Opération impossible."); }
+    catch (exception) { setError(exception instanceof Error ? exception.message : "Opération impossible."); throw exception; }
   }
 
   function logout() { localStorage.clear(); setLogged(false); }
