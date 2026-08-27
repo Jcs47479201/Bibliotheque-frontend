@@ -26,4 +26,98 @@ function BookRow({ book, authors, categories }: { book: Data; authors: Data[]; c
 function relationId(value: unknown): string { return value && typeof value === "object" ? idOf(value as Data) : String(value || ""); }
 function relationValues(value: unknown): string[] { return Array.isArray(value) ? value.map(relationId).filter(Boolean) : []; }
 
-function BookForm({ authors, categories, libraries, mutate, onClose }: { authors: Data[]; categories: Data[]; libraries: Data[]; mutate: CatalogueProps["mutate"]; onClose: () => void }) { const [form, setForm] = useState({ titre: "", isbn: "", pages: "", langue: "fr", statut: "disponible", categorie: idOf(categories[0] || {}), bibliotheque: idOf(libraries[0] || {}), auteurs: [] as string[] }); const update = (key: string, value: string) => setForm({ ...form, [key]: value }); const submit = async (event: FormEvent) => { event.preventDefault(); await mutate("/api/catalogue/livres/create/", "POST", { ...form, pages: Number(form.pages) }); onClose(); }; return <form className="modal-form" onSubmit={submit}><div className="grid">{(["titre", "isbn", "pages", "langue"] as const).map((key) => <label key={key}>{key}<input value={form[key]} onChange={(event) => update(key, event.target.value)} required /></label>)}<label>Catégorie<select value={form.categorie} onChange={(event) => update("categorie", event.target.value)}>{categories.map((item) => <option key={idOf(item)} value={idOf(item)}>{textOf(item, ["nom"])}</option>)}</select></label><label>Statut<select value={form.statut} onChange={(event) => update("statut", event.target.value)}><option value="disponible">Disponible</option><option value="emprunte">Emprunté</option><option value="endommage">Endommagé</option><option value="non_disponible">Non disponible</option></select></label></div><label>Auteurs (sélection multiple)<select className="authors-select" multiple size={Math.min(5, Math.max(3, authors.length))} value={form.auteurs} onChange={(event) => setForm({ ...form, auteurs: Array.from(event.target.selectedOptions, (option) => option.value) })}>{authors.map((item) => <option key={idOf(item)} value={idOf(item)}>{textOf(item, ["nom"])}</option>)}</select></label><div className="modal-actions"><button type="button" className="cancel-button" onClick={onClose}>Annuler</button><button className="modal-submit" type="submit">Ajouter</button></div></form>; }
+function BookForm({ authors, categories, libraries, mutate, onClose }: { authors: Data[]; categories: Data[]; libraries: Data[]; mutate: CatalogueProps["mutate"]; onClose: () => void }) {
+  const [form, setForm] = useState({
+    titre: "",
+    isbn: "",
+    pages: "",
+    langue: "fr",
+    statut: "disponible",
+    bibliotheque: idOf(libraries[0] || {}),
+    categorie: idOf(categories[0] || {}),
+    auteurs: [] as string[],
+  });
+  const update = (key: string, value: string) => setForm((prev) => ({ ...prev, [key]: value }));
+
+  const availableCategories = categories.filter(
+    (c) => !form.bibliotheque || !c.bibliotheque || String(c.bibliotheque) === form.bibliotheque
+  );
+
+  const submit = async (event: FormEvent) => {
+    event.preventDefault();
+    await mutate("/api/catalogue/livres/create/", "POST", { ...form, pages: Number(form.pages) });
+    onClose();
+  };
+
+  return (
+    <form className="modal-form" onSubmit={submit}>
+      <div className="grid">
+        {(["titre", "isbn", "pages", "langue"] as const).map((key) => (
+          <label key={key}>
+            {key}
+            <input value={form[key]} onChange={(event) => update(key, event.target.value)} required />
+          </label>
+        ))}
+        {libraries.length > 1 && (
+          <label>
+            Bibliothèque
+            <select
+              value={form.bibliotheque}
+              onChange={(event) => {
+                const libId = event.target.value;
+                const nextCats = categories.filter((c) => !libId || !c.bibliotheque || String(c.bibliotheque) === libId);
+                setForm((prev) => ({ ...prev, bibliotheque: libId, categorie: idOf(nextCats[0] || {}) }));
+              }}
+              required
+            >
+              {libraries.map((item) => (
+                <option key={idOf(item)} value={idOf(item)}>
+                  {textOf(item, ["nom"])}
+                </option>
+              ))}
+            </select>
+          </label>
+        )}
+        <label>
+          Catégorie
+          <select value={form.categorie} onChange={(event) => update("categorie", event.target.value)} required>
+            {availableCategories.map((item) => (
+              <option key={idOf(item)} value={idOf(item)}>
+                {textOf(item, ["nom"])}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label>
+          Statut
+          <select value={form.statut} onChange={(event) => update("statut", event.target.value)}>
+            <option value="disponible">Disponible</option>
+            <option value="emprunte">Emprunté</option>
+            <option value="endommage">Endommagé</option>
+            <option value="non_disponible">Non disponible</option>
+          </select>
+        </label>
+      </div>
+      <label>
+        Auteurs (sélection multiple)
+        <select
+          className="authors-select"
+          multiple
+          size={Math.min(5, Math.max(3, authors.length))}
+          value={form.auteurs}
+          onChange={(event) => setForm({ ...form, auteurs: Array.from(event.target.selectedOptions, (option) => option.value) })}
+        >
+          {authors.map((item) => (
+            <option key={idOf(item)} value={idOf(item)}>
+              {textOf(item, ["nom"])}
+            </option>
+          ))}
+        </select>
+      </label>
+      <div className="modal-actions">
+        <button type="button" className="cancel-button" onClick={onClose}>Annuler</button>
+        <button className="modal-submit" type="submit">Ajouter</button>
+      </div>
+    </form>
+  );
+}

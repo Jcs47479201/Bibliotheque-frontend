@@ -20,6 +20,31 @@ export function CategoriesPage({ categories, libraries, mutate }: { categories: 
 function CategoryForm({ category, libraries, mutate, onClose }: { category: Data | null; libraries: Data[]; mutate: Mutate; onClose: () => void }) {
   const [name, setName] = useState(textOf(category || {}, ["nom"]));
   const [library, setLibrary] = useState(String(category?.bibliotheque || idOf(libraries[0] || {})));
-  async function submit(event: FormEvent<HTMLFormElement>) { event.preventDefault(); const payload = { nom: name, bibliotheque: library }; await mutate(category ? `/api/catalogue/categories/${idOf(category)}/` : "/api/catalogue/categories/create/", category ? "PATCH" : "POST", payload); onClose(); }
-  return <form className="modal-form" onSubmit={submit}><label htmlFor="category-name">Nom<input id="category-name" value={name} onChange={(event) => setName(event.target.value)} required placeholder="Nom de la catégorie" /></label><label htmlFor="category-library">Bibliothèque<select id="category-library" value={library} onChange={(event) => setLibrary(event.target.value)} required>{libraries.map((item) => <option key={idOf(item)} value={idOf(item)}>{textOf(item, ["nom"])}</option>)}</select></label><div className="modal-actions"><button type="button" className="cancel-button" onClick={onClose}>Annuler</button><button type="submit" className="modal-submit">{category ? "Enregistrer" : "Ajouter"}</button></div></form>;
+  async function submit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const payload: Record<string, string> = { nom: name };
+    if (library) payload.bibliotheque = library;
+    await mutate(category ? `/api/catalogue/categories/${idOf(category)}/` : "/api/catalogue/categories/create/", category ? "PATCH" : "POST", payload);
+    onClose();
+  }
+  return (
+    <form className="modal-form" onSubmit={submit}>
+      <label htmlFor="category-name">
+        Nom
+        <input id="category-name" value={name} onChange={(event) => setName(event.target.value)} required placeholder="Nom de la catégorie" />
+      </label>
+      {libraries.length > 1 && (
+        <label htmlFor="category-library">
+          Bibliothèque
+          <select id="category-library" value={library} onChange={(event) => setLibrary(event.target.value)} required>
+            {libraries.map((item) => <option key={idOf(item)} value={idOf(item)}>{textOf(item, ["nom"])}</option>)}
+          </select>
+        </label>
+      )}
+      <div className="modal-actions">
+        <button type="button" className="cancel-button" onClick={onClose}>Annuler</button>
+        <button type="submit" className="modal-submit">{category ? "Enregistrer" : "Ajouter"}</button>
+      </div>
+    </form>
+  );
 }

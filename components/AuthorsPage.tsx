@@ -38,7 +38,7 @@ function AuthorForm({ author, libraries, mutate, onClose }: { author: Data | nul
         Nom
         <input id="author-name" value={authorName} onChange={(event) => setAuthorName(event.target.value)} required placeholder="Nom de l’auteur" />
       </label>
-      {libraries.length > 0 && (
+      {libraries.length > 1 && (
         <label htmlFor="author-library">
           Bibliothèque
           <select id="author-library" value={library} onChange={(event) => setLibrary(event.target.value)} required>

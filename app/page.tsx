@@ -50,7 +50,7 @@ export default function Home() {
       ]);
       setOrganisation(org); setLibraries(libs); setAuthors(authorsData); setCategories(categoriesData); setBooks(booksData); setLoans(loansData);
       if (user.organisation_id && (user.platform_admin || user.role === "owner" || user.role === "admin")) setUsers(await apiRequest("/api/users/organisation/"));
-      const libraryId = selectedLibrary || idOf(libs[0] || {});
+      const libraryId = user.bibliotheque_id || selectedLibrary || idOf(libs[0] || {});
       setSelectedLibrary(libraryId);
       if (libraryId) setMembers(await apiRequest(`/api/bibliotheque/me/${libraryId}/adherents/`));
     } catch (exception) {

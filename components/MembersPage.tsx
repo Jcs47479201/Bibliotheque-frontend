@@ -20,14 +20,16 @@ export function MembersPage({ members, loans, libraries, selectedLibrary, onLibr
       </div>
       <section className="filters member-filters">
         <input placeholder="Rechercher un nom ou un email…" />
-        <select value={selectedLibrary} onChange={(event) => onLibraryChange(event.target.value)}>
-          <option value="">Toutes les bibliothèques</option>
-          {libraries.map((library) => (
-            <option key={idOf(library)} value={idOf(library)}>
-              {textOf(library, ["nom"])}
-            </option>
-          ))}
-        </select>
+        {libraries.length > 1 && (
+          <select value={selectedLibrary} onChange={(event) => onLibraryChange(event.target.value)}>
+            <option value="">Toutes les bibliothèques</option>
+            {libraries.map((library) => (
+              <option key={idOf(library)} value={idOf(library)}>
+                {textOf(library, ["nom"])}
+              </option>
+            ))}
+          </select>
+        )}
       </section>
       {showForm && (
         <Modal title="Ajouter un adhérent" onClose={() => setShowForm(false)}>
@@ -59,7 +61,7 @@ export function MembersPage({ members, loans, libraries, selectedLibrary, onLibr
                   <td>
                     <div className="row-actions">
                       <button title="Voir">◉</button>
-                      <button title="Modifier">⌕</button>
+                      <button title="Modifier">✎</button>
                       <button className="delete" onClick={() => mutate(`/api/bibliotheque/adherent/${idOf(member)}/`, "DELETE")}>⊘</button>
                     </div>
                   </td>
@@ -68,7 +70,7 @@ export function MembersPage({ members, loans, libraries, selectedLibrary, onLibr
             })}
           </tbody>
         </table>
-        {!members.length && <p className="dashboard-empty">Aucun membre dans cette bibliothèque.</p>}
+        {!members.length && <p className="dashboard-empty">Aucun membre enregistré.</p>}
       </section>
     </div>
   );
@@ -99,7 +101,7 @@ function MemberForm({ libraries, defaultLibraryId, mutate, onClose }: { librarie
             <input name={field} required />
           </label>
         ))}
-        {libraries.length > 0 && (
+        {libraries.length > 1 && (
           <label>
             Bibliothèque
             <select value={library} onChange={(e) => setLibrary(e.target.value)} required>
