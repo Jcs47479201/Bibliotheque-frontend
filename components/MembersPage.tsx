@@ -6,7 +6,116 @@ import { Modal } from "@/components/Modal";
 
 export function MembersPage({ members, loans, libraries, selectedLibrary, onLibraryChange, mutate }: { members: Data[]; loans: Data[]; libraries: Data[]; selectedLibrary: string; onLibraryChange: (id: string) => void; mutate: (path: string, method: string, data?: Data) => Promise<void> }) {
   const [showForm, setShowForm] = useState(false);
-  return <div className="resource-page"><div className="resource-heading"><div><h2>Membres</h2><p>Communauté inscrite à la bibliothèque</p></div><div className="heading-actions"><button className="export-button">⇩ &nbsp; Export CSV</button><button className="orange-button" onClick={() => setShowForm(true)}>＋ &nbsp;Nouveau membre</button></div></div><section className="filters member-filters"><input placeholder="Rechercher un nom ou un email…" /><select value={selectedLibrary} onChange={(event) => onLibraryChange(event.target.value)}><option value="">Toutes les bibliothèques</option>{libraries.map((library) => <option key={idOf(library)} value={idOf(library)}>{textOf(library, ["nom"])}</option>)}</select></section>{showForm && <Modal title="Ajouter un adhérent" onClose={() => setShowForm(false)}><MemberForm mutate={mutate} onClose={() => setShowForm(false)} /></Modal>}<section className="resource-table"><table><thead><tr><th>Membre</th><th>Contact</th><th>Inscription</th><th>Emprunts actifs</th><th>Statut</th><th>Actions</th></tr></thead><tbody>{members.map((member) => { const activeLoans = loans.filter((loan) => String(loan.adherent) === idOf(member) && !loan.date_retour).length; return <tr key={idOf(member)}><td><strong>{textOf(member, ["prenom", "nom"])}</strong></td><td>{textOf(member, ["email"])}<small>{textOf(member, ["contact"])}</small></td><td>{String(member.date_creation || "-").slice(0, 10)}</td><td>{activeLoans}</td><td><span className="status-pill disponible">Actif</span></td><td><div className="row-actions"><button title="Voir">◉</button><button title="Modifier">⌕</button><button className="delete" onClick={() => mutate(`/api/bibliotheque/adherent/${idOf(member)}/`, "DELETE")}>⊘</button></div></td></tr>; })}</tbody></table>{!members.length && <p className="dashboard-empty">Aucun membre dans cette bibliothèque.</p>}</section></div>;
+  return (
+    <div className="resource-page">
+      <div className="resource-heading">
+        <div>
+          <h2>Membres</h2>
+          <p>Communauté inscrite à la bibliothèque</p>
+        </div>
+        <div className="heading-actions">
+          <button className="export-button">⇩ &nbsp; Export CSV</button>
+          <button className="orange-button" onClick={() => setShowForm(true)}>＋ &nbsp;Nouveau membre</button>
+        </div>
+      </div>
+      <section className="filters member-filters">
+        <input placeholder="Rechercher un nom ou un email…" />
+        <select value={selectedLibrary} onChange={(event) => onLibraryChange(event.target.value)}>
+          <option value="">Toutes les bibliothèques</option>
+          {libraries.map((library) => (
+            <option key={idOf(library)} value={idOf(library)}>
+              {textOf(library, ["nom"])}
+            </option>
+          ))}
+        </select>
+      </section>
+      {showForm && (
+        <Modal title="Ajouter un adhérent" onClose={() => setShowForm(false)}>
+          <MemberForm libraries={libraries} defaultLibraryId={selectedLibrary || idOf(libraries[0] || "")} mutate={mutate} onClose={() => setShowForm(false)} />
+        </Modal>
+      )}
+      <section className="resource-table">
+        <table>
+          <thead>
+            <tr>
+              <th>Membre</th>
+              <th>Contact</th>
+              <th>Inscription</th>
+              <th>Emprunts actifs</th>
+              <th>Statut</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {members.map((member) => {
+              const activeLoans = loans.filter((loan) => String(loan.adherent) === idOf(member) && !loan.date_retour).length;
+              return (
+                <tr key={idOf(member)}>
+                  <td><strong>{textOf(member, ["prenom", "nom"])}</strong></td>
+                  <td>{textOf(member, ["email"])}<small>{textOf(member, ["contact"])}</small></td>
+                  <td>{String(member.date_creation || "-").slice(0, 10)}</td>
+                  <td>{activeLoans}</td>
+                  <td><span className="status-pill disponible">Actif</span></td>
+                  <td>
+                    <div className="row-actions">
+                      <button title="Voir">◉</button>
+                      <button title="Modifier">⌕</button>
+                      <button className="delete" onClick={() => mutate(`/api/bibliotheque/adherent/${idOf(member)}/`, "DELETE")}>⊘</button>
+                    </div>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+        {!members.length && <p className="dashboard-empty">Aucun membre dans cette bibliothèque.</p>}
+      </section>
+    </div>
+  );
 }
 
-function MemberForm({ mutate, onClose }: { mutate: (path: string, method: string, data?: Data) => Promise<void>; onClose: () => void }) { const submit = async (event: FormEvent<HTMLFormElement>) => { event.preventDefault(); try { await mutate("/api/bibliotheque/me/adherents/create/", "POST", Object.fromEntries(new FormData(event.currentTarget))); onClose(); } catch { return; } }; return <form className="modal-form" onSubmit={submit}><div className="grid">{["nom", "prenom", "email", "contact"].map((field) => <label key={field}>{field}<input name={field} required /></label>)}</div><div className="modal-actions"><button type="button" className="cancel-button" onClick={onClose}>Annuler</button><button className="modal-submit" type="submit">Ajouter</button></div></form>; }
+function MemberForm({ libraries, defaultLibraryId, mutate, onClose }: { libraries: Data[]; defaultLibraryId: string; mutate: (path: string, method: string, data?: Data) => Promise<void>; onClose: () => void }) {
+  const [library, setLibrary] = useState(defaultLibraryId || idOf(libraries[0] || ""));
+  const submit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    try {
+      const formData = new FormData(event.currentTarget);
+      const payload: Record<string, string> = Object.fromEntries(formData) as Record<string, string>;
+      if (library) {
+        payload.bibliotheque = library;
+      }
+      await mutate("/api/bibliotheque/me/adherents/create/", "POST", payload);
+      onClose();
+    } catch {
+      return;
+    }
+  };
+  return (
+    <form className="modal-form" onSubmit={submit}>
+      <div className="grid">
+        {["nom", "prenom", "email", "contact"].map((field) => (
+          <label key={field}>
+            {field}
+            <input name={field} required />
+          </label>
+        ))}
+        {libraries.length > 0 && (
+          <label>
+            Bibliothèque
+            <select value={library} onChange={(e) => setLibrary(e.target.value)} required>
+              {libraries.map((lib) => (
+                <option key={idOf(lib)} value={idOf(lib)}>
+                  {textOf(lib, ["nom"])}
+                </option>
+              ))}
+            </select>
+          </label>
+        )}
+      </div>
+      <div className="modal-actions">
+        <button type="button" className="cancel-button" onClick={onClose}>Annuler</button>
+        <button className="modal-submit" type="submit">Ajouter</button>
+      </div>
+    </form>
+  );
+}

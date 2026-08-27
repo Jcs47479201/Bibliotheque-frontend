@@ -86,7 +86,7 @@ function Content({ section, books, authors, categories, libraries, members, loan
   if (section === "auteurs") return <AuthorsPage authors={authors} libraries={libraries} mutate={mutate} />;
   if (section === "categories") return <CategoriesPage categories={categories} libraries={libraries} mutate={mutate} />;
   if (section === "emprunts") return <LoansPage loans={loans} books={books} members={members} mutate={mutate} />;
-  if (section === "utilisateurs") return <UsersPage users={users} mutate={mutate} />;
+  if (section === "utilisateurs") return <UsersPage users={users} libraries={libraries} mutate={mutate} />;
   if (section === "administration") return <PlatformAdminPage organisations={organisations} libraries={platformLibraries} mutate={mutate} />;
   return <MembersPage members={members} loans={loans} libraries={libraries} selectedLibrary={selectedLibrary} onLibraryChange={onLibraryChange} mutate={mutate} />;
 }
