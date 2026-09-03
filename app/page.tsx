@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { Bell, ChevronDown, Menu, Search } from "lucide-react";
 import { AuthorsPage } from "@/components/AuthorsPage";
 import { CataloguePage } from "@/components/CataloguePage";
 import { CategoriesPage } from "@/components/CategoriesPage";
@@ -77,7 +78,7 @@ export default function Home() {
   function logout() { localStorage.clear(); setLogged(false); }
 
   const canManageUsers = Boolean(currentUser?.organisation_id && !currentUser?.platform_admin && (currentUser?.role === "owner" || currentUser?.role === "admin"));
-  return <main className="app"><Sidebar section={section} organisationName={textOf(organisation || {}, ["nom"])} canManageUsers={canManageUsers} isPlatformAdmin={Boolean(currentUser?.platform_admin)} onNavigate={setSection} onLogout={logout} /><div className="main"><header><div className="top-summary">{books.length} ouvrages <span>·</span> {members.length} membres</div><button className="theme-toggle" title="Changer de thème">☾</button></header>{error && <div className="alert">{error}<button onClick={() => setError("")}>×</button></div>}{loading && <div className="progress" />}<Content section={section} books={books} authors={authors} categories={categories} libraries={libraries} members={members} loans={loans} users={users} organisations={organisations} platformLibraries={platformLibraries} selectedLibrary={selectedLibrary} onLibraryChange={setSelectedLibrary} mutate={mutate} onNavigate={setSection} /></div></main>;
+  return <main className="app"><Sidebar section={section} organisationName={textOf(organisation || {}, ["nom"])} canManageUsers={canManageUsers} isPlatformAdmin={Boolean(currentUser?.platform_admin)} onNavigate={setSection} onLogout={logout} /><div className="main"><header><button className="mobile-menu" title="Ouvrir le menu"><Menu size={19} /></button><div className="global-search"><Search size={16} /><input placeholder="Rechercher une ressource, un auteur, une bibliothèque..." /></div><div className="header-actions"><button className="icon-button" title="Notifications"><Bell size={18} /><b>3</b></button><div className="user-chip"><span>AS</span><strong>Alexis Seri Bi<small>Administrateur</small></strong><ChevronDown size={14} /></div></div></header>{error && <div className="alert">{error}<button onClick={() => setError("")}>×</button></div>}{loading && <div className="progress" />}<Content section={section} books={books} authors={authors} categories={categories} libraries={libraries} members={members} loans={loans} users={users} organisations={organisations} platformLibraries={platformLibraries} selectedLibrary={selectedLibrary} onLibraryChange={setSelectedLibrary} mutate={mutate} onNavigate={setSection} /></div></main>;
 }
 
 function Content({ section, books, authors, categories, libraries, members, loans, users, organisations, platformLibraries, selectedLibrary, onLibraryChange, mutate, onNavigate }: { section: Section; books: Data[]; authors: Data[]; categories: Data[]; libraries: Data[]; members: Data[]; loans: Data[]; users: Data[]; organisations: Data[]; platformLibraries: Data[]; selectedLibrary: string; onLibraryChange: (id: string) => void; mutate: (path: string, method: string, data?: Data) => Promise<void>; onNavigate: (section: Section) => void }) {
